@@ -181,7 +181,7 @@ void EPollServer::processNewWork(EPollServer* eServer, ConnectionInfo * info, un
         return;
     }
     info->nCoroutine = nCoroutine;
-    bool ctin = func(&info->socket);
+    bool ctin = func(&info->socket, info->socket.eServer, info->socket.cManager);
     if(!ctin)
     {
         eServer->activeList.erase(info->activeIterator);

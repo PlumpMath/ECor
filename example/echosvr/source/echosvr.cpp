@@ -13,7 +13,7 @@
 
 #define CHECKRS(RS, EXPECT, NAME, ERR, RET) if((RS) != (EXPECT)){ perror(NAME); return (RET); }
 
-bool echoServer(ECor::TCPSocket* socket)
+bool echoServer(ECor::TCPSocket* socket, ECor::EPollServer*, ECor::CoroutineManager*)
 {
     unsigned int size = 0;
     {
