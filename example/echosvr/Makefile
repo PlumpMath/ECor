@@ -21,7 +21,7 @@ SCFLAGS=-I$(SCURABSPATH)$(SINCDIR)
 
 release:$(CURABSPATH)echosvr
 
-$(CURABSPATH)echosvr:$(OBJS)
+$(CURABSPATH)echosvr:$(OBJS) $(CURABSPATH)$(LIBDIR)/lib$(LIBNAME).a
 	$(CC) $(SCFLAGS) $(CFLAGS) -o $@ -L$(CURABSPATH)$(LIBDIR) $(patsubst %,$(OBJDIR)/%,$(OBJS)) -l$(LIBNAME)
 
 %.o:%.$(POSTFIX)

@@ -8,18 +8,19 @@
 namespace ECor
 {
 
-void CoroutineManager::onCoroutineExit(CoroutineManager* _manager)
+void CoroutineManager::onCoroutineExit(CoroutineManager* manager)
 {
-    CoroutineManager* manager = _manager;
-    int ret = swapcontext(&manager->cInfos[0].context, &manager->cInfos[manager->curNCoroutine].context);
-    assert(ret == 0);
     while(true)
     {
         manager->lastNCoroutine = manager->curNCoroutine;
         manager->curNCoroutine = 1;
         manager->freeCoroutineNumber.push(manager->lastNCoroutine);
         manager->cInfos[manager->lastNCoroutine].used = 0;
-        ret = swapcontext(&manager->cInfos[0].context, &manager->cInfos[manager->curNCoroutine].context);
+#ifndef NDEBUG
+        int ret = swapcontext(&manager->cInfos[0].context, &manager->cInfos[manager->curNCoroutine].context);
+#else
+        swapcontext(&manager->cInfos[0].context, &manager->cInfos[manager->curNCoroutine].context);
+#endif
         assert(ret == 0);
     }
 }
@@ -34,7 +35,11 @@ CoroutineManager::CoroutineManager(size_t _size, size_t _stackSize)
         cInfos[i].used = 0;
         cInfos[i].stack = new char[stackSize];
     }
+#ifndef NDEBUG
     int ret = getcontext(&cInfos[0].context);
+#else
+    getcontext(&cInfos[0].context);
+#endif
     assert(ret == 0);
     cInfos[0].context.uc_link = NULL;
     cInfos[0].context.uc_stack.ss_sp = cInfos[0].stack;
@@ -43,8 +48,6 @@ CoroutineManager::CoroutineManager(size_t _size, size_t _stackSize)
     makecontext(&cInfos[0].context, (_cbk) onCoroutineExit, 1, this);
     for(size_t i = 2; i < size; ++i)
         freeCoroutineNumber.push(i);
-    ret = swapcontext(&cInfos[curNCoroutine].context, &cInfos[0].context);
-    assert(ret == 0);
     clk = ETime::millisecond();
 }
 
