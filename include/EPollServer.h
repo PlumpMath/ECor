@@ -17,7 +17,7 @@ namespace ECor
 
 struct ConnectionInfo
 {
-    clock_t activeClock;
+    long activeClock;
     size_t nCoroutine;
     TCPSocket socket;
     std::list<ConnectionInfo*>::iterator activeIterator;

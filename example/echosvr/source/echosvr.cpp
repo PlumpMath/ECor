@@ -15,18 +15,12 @@
 
 bool echoServer(ECor::TCPSocket* socket, ECor::EPollServer*, ECor::CoroutineManager*)
 {
-    unsigned int size = 0;
-    {
-        char s[5];
-        CHECKRS(socket->read(&s, 4), 4, "read", socket->error(), false);
-        s[4] = '\0';
-        size = strtoul(s, NULL, 0);
-    }
-    char* str = new char[size + 1];
-    CHECKRS(socket->read(str, size), size, "read", socket->error(), false);
-    str[size] = '\0';
-    printf("recv: %s\n", str);
-    socket->write(str, size);
+    std::string str;
+    int ret = socket->readLine(str);
+    if(ret < 0)
+        perror("readline error");
+    printf("recv: %s\n", str.c_str());
+    socket->write(str.c_str(), str.size());
     return true;
 }
 

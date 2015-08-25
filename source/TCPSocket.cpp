@@ -82,6 +82,52 @@ ssize_t TCPSocket::write(const void* buffer, size_t size)
     return sent;
 }
 
+ssize_t TCPSocket::readLine(std::string& str)
+{
+    size_t received = 0;
+    eServer->ctlRecv(this);
+    while(true)
+    {
+        if(requestTimeout != 0 && cManager->getTimeUsed() > requestTimeout)
+            close();
+        if(closed)
+            return -2;
+        char tmp[16];
+        ssize_t ret = recv(fd, tmp, 16, MSG_DONTWAIT | MSG_PEEK);
+        if(ret < 0 && (errno == EAGAIN || errno == EWOULDBLOCK))
+            cManager->yield();
+        else if(ret < 0 && errno == EINTR)
+            continue;
+        else if(ret < 0)
+        {
+            err = errno;
+            return ret;
+        }
+        else if(ret == 0)
+            return received;
+        else
+        {
+            size_t i;
+            for(i = 0; i < 16; ++i)
+            {
+                if(tmp[i] == '\n')
+                {
+                    ret = this->read(tmp, i + 1);
+                    if(ret < 0 || ret != i + 1)
+                        return -1;
+                    str.append(tmp, i);
+                    return received + i;
+                }
+            }
+            ret = this->read(tmp, 16);
+            if(ret < 0)
+                return -1;
+            str.append(tmp, 16);
+            received += 16;
+        }
+    }
+}
+
 void TCPSocket::close()
 {
     if(closed)

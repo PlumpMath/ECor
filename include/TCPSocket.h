@@ -5,6 +5,8 @@
  * @author xiao
  */
 
+#include <string>
+
 #include <sys/types.h>
 
 #include "InetAddress.h"
@@ -61,6 +63,8 @@ public:
      */
     ssize_t write(const void* buffer, size_t size);
 
+    ssize_t readLine(std::string& str);
+
     /**
      * close the socket, and remove from EPollServer.
      */
@@ -74,9 +78,9 @@ public:
 
     bool isClosed();
 
-    void setRequestTimeout(clock_t timeout);
+    void setRequestTimeout(long timeout);
 
-    clock_t getRequestTimeout();
+    long getRequestTimeout();
 
     const InetAddress& getRemoteAddress();
 
