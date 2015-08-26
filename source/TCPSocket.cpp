@@ -112,8 +112,8 @@ ssize_t TCPSocket::readLine(std::string& str)
         {
             if(tmp[i] == '\n')
             {
-                int ret = this->read(tmp, i + 1);
-                if(ret < 0 || ret != i + 1)
+                int ret2 = this->read(tmp, i + 1);
+                if(ret2 < 0 || ret2 != i + 1)
                     return -1;
                 str.append(tmp, i);
                 return received + i;
