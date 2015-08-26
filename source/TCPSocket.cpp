@@ -95,7 +95,10 @@ ssize_t TCPSocket::readLine(std::string& str)
         char tmp[16];
         ssize_t ret = recv(fd, tmp, 16, MSG_DONTWAIT | MSG_PEEK);
         if(ret < 0 && (errno == EAGAIN || errno == EWOULDBLOCK))
+        {
             cManager->yield();
+            continue;
+        }
         else if(ret < 0 && errno == EINTR)
             continue;
         else if(ret < 0)
@@ -105,26 +108,22 @@ ssize_t TCPSocket::readLine(std::string& str)
         }
         else if(ret == 0)
             return received;
-        else
+        for(int i = 0; i < ret; ++i)
         {
-            size_t i;
-            for(i = 0; i < 16; ++i)
+            if(tmp[i] == '\n')
             {
-                if(tmp[i] == '\n')
-                {
-                    ret = this->read(tmp, i + 1);
-                    if(ret < 0 || ret != i + 1)
-                        return -1;
-                    str.append(tmp, i);
-                    return received + i;
-                }
+                int ret = this->read(tmp, i + 1);
+                if(ret < 0 || ret != i + 1)
+                    return -1;
+                str.append(tmp, i);
+                return received + i;
             }
-            ret = this->read(tmp, 16);
-            if(ret < 0)
-                return -1;
-            str.append(tmp, 16);
-            received += 16;
         }
+        int ret2 = this->read(tmp, ret);
+        if(ret2 < 0)
+            return -1;
+        str.append(tmp, ret);
+        received += ret;
     }
 }
 
