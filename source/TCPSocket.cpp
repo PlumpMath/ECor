@@ -36,19 +36,21 @@ ssize_t TCPSocket::read(void* buffer, size_t size)
         if(closed)
             return -2;
         ssize_t ret = recv(fd, ((char*) buffer) + received, size - received, MSG_DONTWAIT);
-        if(ret < 0 && (errno == EAGAIN || errno == EWOULDBLOCK))
-            cManager->yield();
-        else if(ret < 0 && errno == EINTR)
-            continue;
-        else if(ret < 0)
+        if (ret <= 0)
         {
+            if (ret == 0)
+                return received;
+            if (errno == EAGAIN || errno == EWOULDBLOCK)
+            {
+                cManager->yield();
+                continue;
+            }
+            if (errno == EINTR)
+                continue;
             err = errno;
             return ret;
         }
-        else if(ret == 0)
-            return received;
-        else
-            received += ret;
+        received += ret;
     }
     return received;
 }
@@ -94,20 +96,20 @@ ssize_t TCPSocket::readLine(std::string& str)
             return -2;
         char tmp[16];
         ssize_t ret = recv(fd, tmp, 16, MSG_DONTWAIT | MSG_PEEK);
-        if(ret < 0 && (errno == EAGAIN || errno == EWOULDBLOCK))
+        if(ret <= 0)
         {
-            cManager->yield();
-            continue;
-        }
-        else if(ret < 0 && errno == EINTR)
-            continue;
-        else if(ret < 0)
-        {
+            if (ret == 0)//read end
+                return received;
+            if (errno == EAGAIN || errno == EWOULDBLOCK)
+            {
+                cManager->yield();
+                continue;
+            }
+            if (errno == EINTR)//interrupt
+                continue;
             err = errno;
             return ret;
         }
-        else if(ret == 0)
-            return received;
         for(int i = 0; i < ret; ++i)
         {
             if(tmp[i] == '\n')
